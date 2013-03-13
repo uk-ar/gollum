@@ -230,14 +230,27 @@ module Precious
       end
     end
 
+    p "rooting"
+    require 'debugger'
+
     post '/create' do
-      name         = params[:page].to_url
+      # p params
+      # {"targetfile"=>{:filename=>"truncated.png", :type=>"image/png", :name=>"targetfile", :tempfile=><File:/var/folders/8f/67jmy2tj33l545jc3cg2k78r0000gn/T/RackMultipart20130314-72906-rcy1c1>, :head=>"Content-Disposition: form-data; name=\"targetfile\"; filename=\"truncated.png\"\r\nContent-Type: image/png\r\n"}}
+      # debugger
+      if attachment = params[:attachment]
+        name = attachment[:filename].split.first.to_url
+        format = attachment[:filename].split.last.intern
+        content = attachment[:tempfile]
+      else
+        name         = params[:page].to_url
+        format       = params[:format].intern
+        content = params[:content]
+      end
       path         = sanitize_empty_params(params[:path]) || ''
-      format       = params[:format].intern
       wiki = wiki_new
 
       begin
-        wiki.write_page(name, format, params[:content], commit_message, path)
+        wiki.write_page(name, format, content, commit_message, path)
 
         page_dir = settings.wiki_options[:page_file_dir].to_s
         redirect to("/#{clean_url(::File.join(page_dir, path, name))}")
